@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "507978178911",
+    "firebase_url": "https://documents-locker.firebaseio.com",
+    "project_id": "documents-locker",
+    "storage_bucket": "documents-locker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:507978178911:android:a71f959f7032ee3d7d16ea",
+        "android_client_info": {
+          "package_name": "com.example.documentslocker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "507978178911-s3le33c1c02j6lisbcu2efm0d8t1o489.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.documentslocker",
+            "certificate_hash": "a2edc8f13c074762a8e510006ed4037f5611332f"
+          }
+        },
+        {
+          "client_id": "507978178911-0t87euiuu579g99fg0l5c7oc18hs8b3n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm-ZDglcl3mFiH5b5wqX5tIgEZLYK8n_E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "507978178911-0t87euiuu579g99fg0l5c7oc18hs8b3n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
