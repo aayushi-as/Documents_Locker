@@ -3,4 +3,13 @@
     <string name="favourites">Favourites</string>
     <string name="upload">Upload</string>
     <string name="my_doc">My Doc</string>
+    <string name="document_name">Document Name</string>
+    <string name="upload_your_document_here">UPLOAD YOUR DOCUMENTS HERE</string>
+    <string name="type">Type</string>
+    <string name="jpeg_jpg">jpeg/jpg</string>
+    <string name="pdf">pdf</string>
+    <string name="dox">dox</string>
+    <string name="typeLogo">TypeLogo</string>
+    <string name="select_file">Select file</string>
+    <string name="no_file_selected">No file selected</string>
 </resources>
