@@ -29,7 +29,9 @@ public class MainActivity extends AppCompatActivity {
 
         setUserName(ANONYMOUS);
 
-
+        /*
+        * Launch with UploadFragment
+        * */
         loadFragment(new UploadFragment());
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.upload_page);

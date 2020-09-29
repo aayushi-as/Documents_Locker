@@ -4,16 +4,17 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,44 +36,61 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.File;
 import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
 
 public class UploadFragment extends Fragment {
-    private TextInputEditText document_name_textview;
-    private Button upload_button;
-    private Button select_file;
-    private FirebaseStorage mFirebaseStorage;
-    private FirebaseDatabase mDocumentDatabase;
-    private TextView selectedFileTextView;
-    private Uri pdfUri;
-
     private static final int RC_PERMISSION = 1;
     private static final int RC_INTENT = 2;
 
+    private TextInputEditText document_name_textview;
+    private TextView selectedFileTextView;
+    private ProgressBar progressBar;
+    private Button upload_button;
+    private Button select_file;
+
+    private DatabaseReference mDatabaseReference;
+    private StorageReference mStorageReference;
+
+    private Uri pdfUri;
+    private String file_name;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        /*
+        * 1. Initialization of class variables
+        * 2. Creation of View
+        * */
+
         View view = inflater.inflate(R.layout.fragment_upload, null);
+
         document_name_textview = view.findViewById(R.id.document_name);
+        selectedFileTextView = view.findViewById(R.id.selectedFileId);
+
         upload_button = view.findViewById(R.id.upload_button);
         select_file = view.findViewById(R.id.select_file);
-        selectedFileTextView = view.findViewById(R.id.selectedFileId);
-        mFirebaseStorage = FirebaseStorage.getInstance();
-        mDocumentDatabase = FirebaseDatabase.getInstance();
+        progressBar = view.findViewById(R.id.progressbar);
+
+        FirebaseDatabase mDocumentDatabase = FirebaseDatabase.getInstance();
+        FirebaseStorage mFirebaseStorage = FirebaseStorage.getInstance();
+
+        mDatabaseReference = mDocumentDatabase.getReference().child("User");
+        mStorageReference = mFirebaseStorage.getReference().child("Uploads");
         return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        String[] type = new String[] {"jpeg/jpg", "pdf", "dox"};
 
-        ArrayAdapter<String> typeAdapter = new ArrayAdapter<>(Objects.requireNonNull(getContext()), R.layout.type_menu_item, type);
-
-        AutoCompleteTextView drop_down =  Objects.requireNonNull(getView()).findViewById(R.id.dropdown_menu_type);
-        drop_down.setAdapter(typeAdapter);
+        /*
+        * addTextChangedListener        : To define action on change in document name EditText
+        *                                 Marking error in document name (. and ' ' not allowed)
+        * select_file setOnClickListener
+        * upload_file setOnClickListener
+        * */
 
         document_name_textview.addTextChangedListener(new TextWatcher() {
             @Override
@@ -83,19 +101,12 @@ public class UploadFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String tempName = s.toString();
-                if(tempName.contains(" ")){
+                if (tempName.contains(" ")) {
                     document_name_textview.setError("Spaces not allowed");
-                }
-                else if(tempName.contains(".")){
+                } else if (tempName.contains(".")) {
                     document_name_textview.setError("(.) not allowed");
-                }
-                else{
-                    document_name_textview.setError(null);
-                }
-                if (s.toString().trim().length() > 0) {
-                    upload_button.setEnabled(true);
                 } else {
-                    upload_button.setEnabled(false);
+                    document_name_textview.setError(null);
                 }
             }
 
@@ -108,10 +119,17 @@ public class UploadFragment extends Fragment {
         select_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (ContextCompat.checkSelfPermission(Objects.requireNonNull(getContext()), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+                /*
+                * Select file only if permission was granted,
+                * else
+                * Ask for permission : it's acknowledgement is done in onRequestPermissionResult()
+                * */
+                if (ContextCompat.checkSelfPermission(Objects.requireNonNull(getContext()), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                     selectFile();
-                }
-                else {
+                } else {
+                    /*
+                    * RC_PERMISSION : Request Code to ask for permission to read External Storage
+                    * */
                     ActivityCompat.requestPermissions((Activity) getContext(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_PERMISSION);
                 }
             }
@@ -120,53 +138,112 @@ public class UploadFragment extends Fragment {
         upload_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (pdfUri != null)
-                    uploadFile(pdfUri);
-                else
+                int len = Objects.requireNonNull(document_name_textview.getText()).toString().trim().length();
+                /*
+                * Check for error in document name
+                * or File not select
+                * Otherwise Upload file
+                * */
+                if (len == 0 || document_name_textview.getError() != null){
+                    Toast.makeText(getContext(), "Document name error", Toast.LENGTH_SHORT).show();
+                }
+                else if (pdfUri == null){
                     Toast.makeText(getContext(), "Select a file to upload", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    uploadFile(pdfUri);
+                    progressBar.setVisibility(View.VISIBLE);
+                }
             }
         });
-
 
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == RC_PERMISSION &&  grantResults[0] == PackageManager.PERMISSION_GRANTED ){
+        if (requestCode == RC_PERMISSION && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             selectFile();
-        }
-        else {
+        } else {
             Toast.makeText(getContext(), "Need permission to upload", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void selectFile(){
+    private void selectFile() {
+        /*
+        * Select pdf/docx/doc/jpeg/jpg file
+        * */
+        String[] mimeTypes = {"application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/pdf","image/*"};
         Intent intent = new Intent();
-        intent.setType("application/pdf");
         intent.setAction(Intent.ACTION_GET_CONTENT);
+        intent.setType("file/*");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
         startActivityForResult(intent, RC_INTENT);
     }
 
-    private void uploadFile(Uri uri){
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        /*
+        * Acknowledgement from startActivityForResult
+        * Check request_code and result code
+        * Get uri for that file
+        * */
+        if (requestCode == RC_INTENT && resultCode == RESULT_OK && data != null) {
+            pdfUri = data.getData();
+            assert pdfUri != null;
+            String uri = pdfUri.toString();
+            File file = new File(uri);
+
+            if(uri.startsWith("content://")){
+                Cursor cursor = null;
+                try {
+                    cursor = Objects.requireNonNull(getActivity()).getContentResolver().query(pdfUri, null, null,null,null);
+
+                    if (cursor != null && cursor.moveToFirst()){
+                        file_name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                    }
+                }
+                finally {
+                    assert cursor != null;
+                    cursor.close();
+                }
+            }else if (uri.startsWith("file://")){
+                file_name = file.getName();
+            }
+
+
+            String text = "File selected : " + file_name;
+            selectedFileTextView.setText(text);
+        } else {
+            Toast.makeText(getContext(), "File not selected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void uploadFile(Uri uri) {
+        /*
+        * 1. Upload file to Firebase Storage
+        * 2. Update url of file in Realtime Database
+        * */
         final String filename = System.currentTimeMillis() + "";
 
-        StorageReference storageReference = mFirebaseStorage.getReference().child("Upload");
-        storageReference.child(filename).putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        mStorageReference.child(filename).putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Task<Uri> firebaseUri = taskSnapshot.getStorage().getDownloadUrl();
                 String uri = firebaseUri.toString();
 
-                DatabaseReference documentDatabaseReference = mDocumentDatabase.getReference().child(filename);
-                documentDatabaseReference.setValue(uri).addOnCompleteListener(new OnCompleteListener<Void>() {
+                mDatabaseReference.setValue(uri).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(getContext(), "File uploaded successfully", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(getContext(), "Error : File cannot be uploaded", Toast.LENGTH_SHORT).show();
+                            document_name_textview.setText("");
                         }
+                        else
+                            Toast.makeText(getContext(), "Error : File cannot be uploaded", Toast.LENGTH_SHORT).show();
+
                         selectedFileTextView.setText(R.string.no_file_selected);
+                        progressBar.setVisibility(View.INVISIBLE);
                     }
                 });
             }
@@ -175,6 +252,7 @@ public class UploadFragment extends Fragment {
             public void onFailure(@NonNull Exception e) {
                 Toast.makeText(getContext(), "Error : File cannot be uploaded", Toast.LENGTH_SHORT).show();
                 selectedFileTextView.setText(R.string.no_file_selected);
+                progressBar.setVisibility(View.INVISIBLE);
             }
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -184,15 +262,4 @@ public class UploadFragment extends Fragment {
         });
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RC_INTENT && resultCode == RESULT_OK && data != null){
-            pdfUri = data.getData();
-            String text = "File selected : " + data.getData().getLastPathSegment();
-            selectedFileTextView.setText(text);
-        }else {
-            Toast.makeText(getContext(), "File not selected", Toast.LENGTH_SHORT).show();
-        }
-    }
 }
