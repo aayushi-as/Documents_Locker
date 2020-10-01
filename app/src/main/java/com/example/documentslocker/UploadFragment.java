@@ -37,6 +37,8 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
@@ -45,14 +47,27 @@ public class UploadFragment extends Fragment {
     private static final int RC_PERMISSION = 1;
     private static final int RC_INTENT = 2;
 
-    private TextInputEditText document_name_textview;
+    private static List<Document> documentList = new ArrayList<>();
+
+    public static List<Document> getDocumentList() {
+        return documentList;
+    }
+
+
+    private TextInputEditText document_name_editText;
     private TextView selectedFileTextView;
     private ProgressBar progressBar;
     private Button upload_button;
     private Button select_file;
 
-    private DatabaseReference mDatabaseReference;
+    public static DatabaseReference getDatabaseReference() {
+        return mDatabaseReference;
+    }
+
+    private static DatabaseReference mDatabaseReference;
     private StorageReference mStorageReference;
+
+
 
     private Uri pdfUri;
     private String file_name;
@@ -67,7 +82,7 @@ public class UploadFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_upload, null);
 
-        document_name_textview = view.findViewById(R.id.document_name);
+        document_name_editText = view.findViewById(R.id.document_name);
         selectedFileTextView = view.findViewById(R.id.selectedFileId);
 
         upload_button = view.findViewById(R.id.upload_button);
@@ -78,7 +93,7 @@ public class UploadFragment extends Fragment {
         FirebaseStorage mFirebaseStorage = FirebaseStorage.getInstance();
 
         mDatabaseReference = mDocumentDatabase.getReference().child("User");
-        mStorageReference = mFirebaseStorage.getReference().child("Uploads");
+        mStorageReference = mFirebaseStorage.getReference().child("Upload");
         return view;
     }
 
@@ -92,7 +107,7 @@ public class UploadFragment extends Fragment {
         * upload_file setOnClickListener
         * */
 
-        document_name_textview.addTextChangedListener(new TextWatcher() {
+        document_name_editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -102,11 +117,11 @@ public class UploadFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String tempName = s.toString();
                 if (tempName.contains(" ")) {
-                    document_name_textview.setError("Spaces not allowed");
+                    document_name_editText.setError("Spaces not allowed");
                 } else if (tempName.contains(".")) {
-                    document_name_textview.setError("(.) not allowed");
+                    document_name_editText.setError("(.) not allowed");
                 } else {
-                    document_name_textview.setError(null);
+                    document_name_editText.setError(null);
                 }
             }
 
@@ -138,13 +153,13 @@ public class UploadFragment extends Fragment {
         upload_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int len = Objects.requireNonNull(document_name_textview.getText()).toString().trim().length();
+                int len = Objects.requireNonNull(document_name_editText.getText()).toString().trim().length();
                 /*
                 * Check for error in document name
                 * or File not select
                 * Otherwise Upload file
                 * */
-                if (len == 0 || document_name_textview.getError() != null){
+                if (len == 0 || document_name_editText.getError() != null){
                     Toast.makeText(getContext(), "Document name error", Toast.LENGTH_SHORT).show();
                 }
                 else if (pdfUri == null){
@@ -210,10 +225,9 @@ public class UploadFragment extends Fragment {
             }else if (uri.startsWith("file://")){
                 file_name = file.getName();
             }
-
-
             String text = "File selected : " + file_name;
             selectedFileTextView.setText(text);
+
         } else {
             Toast.makeText(getContext(), "File not selected", Toast.LENGTH_SHORT).show();
         }
@@ -226,18 +240,28 @@ public class UploadFragment extends Fragment {
         * */
         final String filename = System.currentTimeMillis() + "";
 
-        mStorageReference.child(filename).putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        mStorageReference.child(file_name).putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Task<Uri> firebaseUri = taskSnapshot.getStorage().getDownloadUrl();
                 String uri = firebaseUri.toString();
 
-                mDatabaseReference.setValue(uri).addOnCompleteListener(new OnCompleteListener<Void>() {
+                int code = 0;
+
+                if (file_name.endsWith(".pdf"))
+                    code = 3;
+                else if (file_name.endsWith(".jpeg") || file_name.endsWith(".jpg") || file_name.endsWith(".png"))
+                    code = 1;
+                else if (file_name.endsWith(".docx") || file_name.endsWith(".doc"))
+                    code = 2;
+
+                Document document = new Document(document_name_editText.getText().toString(), uri, code);
+                mDatabaseReference.push().setValue(document).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(getContext(), "File uploaded successfully", Toast.LENGTH_SHORT).show();
-                            document_name_textview.setText("");
+                            document_name_editText.setText("");
                         }
                         else
                             Toast.makeText(getContext(), "Error : File cannot be uploaded", Toast.LENGTH_SHORT).show();
