@@ -29,7 +29,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
@@ -38,13 +40,15 @@ import java.util.List;
 import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
-import static com.example.documentslocker.MainActivity.getDatabaseReference;
-import static com.example.documentslocker.MainActivity.getStorageReference;
+import static com.example.documentslocker.MainActivity.getDocumentDatabase;
+import static com.example.documentslocker.MainActivity.getDocumentStorage;
 import static com.example.documentslocker.MyDocumentsFragment.getDocumentAdapter;
 
 public class UploadFragment extends Fragment {
     private static final int RC_PERMISSION = 1;
     private static final int RC_INTENT = 2;
+    private DatabaseReference mDatabaseReference;
+    private StorageReference mStorageReference;
 
     private static List<Document> documentList = new ArrayList<>();
 
@@ -78,6 +82,9 @@ public class UploadFragment extends Fragment {
         upload_button = view.findViewById(R.id.upload_button);
         select_file = view.findViewById(R.id.select_file);
         progressBar = view.findViewById(R.id.progressbar);
+
+        mDatabaseReference = getDocumentDatabase().getReference().child("User");
+        mStorageReference = getDocumentStorage().getReference().child("Upload");
         return view;
     }
 
@@ -224,7 +231,7 @@ public class UploadFragment extends Fragment {
         * */
 //        final String filename = System.currentTimeMillis() + "";
 
-        getStorageReference().child(file_name).putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        mStorageReference.child(file_name).putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Task<Uri> firebaseUri = taskSnapshot.getStorage().getDownloadUrl();
@@ -240,7 +247,7 @@ public class UploadFragment extends Fragment {
                     code = 2;
 
                 Document document = new Document(document_name_editText.getText().toString(), uri, code);
-                getDatabaseReference().push().setValue(document).addOnCompleteListener(new OnCompleteListener<Void>() {
+                mDatabaseReference.push().setValue(document).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {

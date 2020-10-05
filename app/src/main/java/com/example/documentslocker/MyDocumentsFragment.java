@@ -13,19 +13,22 @@ import androidx.fragment.app.Fragment;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 
 import java.util.Objects;
 
-import static com.example.documentslocker.MainActivity.getDatabaseReference;
+import static com.example.documentslocker.MainActivity.getDocumentDatabase;
 import static com.example.documentslocker.UploadFragment.getDocumentList;
 
 public class MyDocumentsFragment extends Fragment {
 
-    public static ChildEventListener mChildEventListener = null;
+    public static ChildEventListener mChildEventListener;
     private static DocumentAdapter mDocumentAdapter;
     public static DocumentAdapter getDocumentAdapter() {
         return mDocumentAdapter;
     }
+    private static DatabaseReference mDatabaseReference;
+//    private StorageReference mStorageReference;
 
 
     @Nullable
@@ -35,7 +38,8 @@ public class MyDocumentsFragment extends Fragment {
         ListView documentListView = view.findViewById(R.id.documentListView);
         mDocumentAdapter = new DocumentAdapter(Objects.requireNonNull(getContext()), R.layout.document_item, getDocumentList());
         documentListView.setAdapter(getDocumentAdapter());
-
+        mDatabaseReference = getDocumentDatabase().getReference().child("User");
+//        mStorageReference = getDocumentStorage().getReference().child("Upload");
         attachDatabaseReadListener();
 
         return view;
@@ -61,13 +65,13 @@ public class MyDocumentsFragment extends Fragment {
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {}
             };
-            getDatabaseReference().addChildEventListener(mChildEventListener);
+            mDatabaseReference.addChildEventListener(mChildEventListener);
         }
     }
     public static void detachDatabaseReadListener(){
         if (mChildEventListener != null){
             mDocumentAdapter.clear();
-            getDatabaseReference().removeEventListener(mChildEventListener);
+            mDatabaseReference.removeEventListener(mChildEventListener);
             mChildEventListener = null;
         }
     }

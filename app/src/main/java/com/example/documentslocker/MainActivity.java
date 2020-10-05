@@ -15,35 +15,35 @@ import androidx.fragment.app.Fragment;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.IdpResponse;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import static com.example.documentslocker.MyDocumentsFragment.detachDatabaseReadListener;
+import static com.example.documentslocker.MyDocumentsFragment.getDocumentAdapter;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static DatabaseReference mDatabaseReference;
-    private static StorageReference mStorageReference;
-    public static DatabaseReference getDatabaseReference() {
-        return mDatabaseReference;
+    private static FirebaseDatabase mDocumentDatabase;
+    private static FirebaseStorage mDocumentStorage;
+    public static FirebaseDatabase getDocumentDatabase() {
+        return mDocumentDatabase;
     }
-    public static StorageReference getStorageReference() {
-        return mStorageReference;
+    public static FirebaseStorage getDocumentStorage() {
+        return mDocumentStorage;
     }
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
+    private FirebaseAuth mFirebaseAuth;
     public static final String ANONYMOUS = "anonymous";
     private static final int RC_SIGN_IN = 5;
     private String mUserName;
-
-    public String getUserName() {
-        return mUserName;
-    }
 
 
     @Override
@@ -51,31 +51,34 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FirebaseAuth mFirebaseAuth = FirebaseAuth.getInstance();
-        FirebaseUser user = mFirebaseAuth.getCurrentUser();
+        mFirebaseAuth = FirebaseAuth.getInstance();
 
-        if (user != null) {
-            mUserName = user.getDisplayName();
-            Toast.makeText(this, "Sign in Successful", Toast.LENGTH_SHORT).show();
-        } else {
-            mUserName = ANONYMOUS;
-            startActivityForResult(AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setAvailableProviders(Arrays.asList(
-                                    new AuthUI.IdpConfig.EmailBuilder().build(),
-                                    new AuthUI.IdpConfig.GoogleBuilder().build()
-                            ))
-                            .setTheme(R.style.AppTheme)
-                            .setIsSmartLockEnabled(false)
-                            .build(),
-                    RC_SIGN_IN);
-        }
+        mDocumentDatabase = FirebaseDatabase.getInstance();
+        mDocumentStorage = FirebaseStorage.getInstance();
 
-        FirebaseDatabase mDocumentDatabase = FirebaseDatabase.getInstance();
-        FirebaseStorage mFirebaseStorage = FirebaseStorage.getInstance();
+        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
 
-        mDatabaseReference = mDocumentDatabase.getReference().child("User");
-        mStorageReference = mFirebaseStorage.getReference().child("Upload");
+                if (user != null) {
+                    mUserName = user.getDisplayName();
+                    Toast.makeText(MainActivity.this, "Sign in Successful", Toast.LENGTH_SHORT).show();
+                } else {
+                    mUserName = ANONYMOUS;
+                    startActivityForResult(AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setAvailableProviders(Arrays.asList(
+                                            new AuthUI.IdpConfig.EmailBuilder().build(),
+                                            new AuthUI.IdpConfig.GoogleBuilder().build()
+                                    ))
+                                    .setIsSmartLockEnabled(false)
+                                    .build(),
+                            RC_SIGN_IN);
+                }
+
+            }
+        };
 
         /*
         * Launch with UploadFragment
@@ -91,12 +94,14 @@ public class MainActivity extends AppCompatActivity {
                 switch (item.getItemId()){
                     case R.id.favourites_page:
                         fragment = new FavouritesFragment();
-                        detachDatabaseReadListener();
+                        getDocumentAdapter().clear();
                         break;
+
                     case R.id.upload_page:
                         fragment = new UploadFragment();
-                        detachDatabaseReadListener();
+                        getDocumentAdapter().clear();
                         break;
+
                     case R.id.my_doc_page:
                         fragment = new MyDocumentsFragment();
                         break;
@@ -127,16 +132,20 @@ public class MainActivity extends AppCompatActivity {
             IdpResponse response = IdpResponse.fromResultIntent(data);
 
             if (resultCode == RESULT_OK) {
-                Toast.makeText(this, "Sign in successful! ", Toast.LENGTH_SHORT).show();
-            } else {
-                if (response != null && response.getError().getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
-                    Toast.makeText(this, "Unknown Error Occurred!", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-                if (response != null && response.getError().getErrorCode() == ErrorCodes.NO_NETWORK) {
-                    Toast.makeText(this, "No Internet Connection!", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
+                String text = "Signed in as " + mUserName;
+                Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+            }
+            else if(resultCode == RESULT_CANCELED)
+            {
+                Toast.makeText(this, "Sign in cancel! ", Toast.LENGTH_SHORT).show();
+            }
+            else if (response != null && Objects.requireNonNull(response.getError()).getErrorCode() == ErrorCodes.NO_NETWORK) {
+                Toast.makeText(this, "No Internet Connection!", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+            else if (response != null && response.getError().getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
+                Toast.makeText(this, "Unknown Error Occurred!", Toast.LENGTH_SHORT).show();
+                finish();
             }
         }
 
@@ -145,7 +154,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         detachDatabaseReadListener();
-        AuthUI.getInstance().signOut(this);
+        getDocumentAdapter().clear();
+        if (mAuthStateListener != null){
+            mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+        }
+        mAuthStateListener = null;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mAuthStateListener != null){
+            mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+        }
     }
 
     @Override
@@ -159,11 +180,20 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.sign_out) {
             detachDatabaseReadListener();
-            AuthUI.getInstance().signOut(this);
+            getDocumentAdapter().clear();
+            sign_out();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-
+    private void sign_out(){
+        AuthUI.getInstance().signOut(this).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                Toast.makeText(MainActivity.this, "Signed out successfully", Toast.LENGTH_SHORT).show();
+                MainActivity.this.finish();
+            }
+        });
+    }
 }
