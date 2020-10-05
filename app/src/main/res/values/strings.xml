@@ -12,4 +12,5 @@
     <string name="typeLogo">TypeLogo</string>
     <string name="select_file">Select file</string>
     <string name="no_file_selected">No file selected</string>
+    <string name="sign_out">SignOut</string>
 </resources>

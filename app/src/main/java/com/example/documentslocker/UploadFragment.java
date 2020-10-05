@@ -29,11 +29,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
@@ -42,6 +38,9 @@ import java.util.List;
 import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
+import static com.example.documentslocker.MainActivity.getDatabaseReference;
+import static com.example.documentslocker.MainActivity.getStorageReference;
+import static com.example.documentslocker.MyDocumentsFragment.getDocumentAdapter;
 
 public class UploadFragment extends Fragment {
     private static final int RC_PERMISSION = 1;
@@ -59,15 +58,6 @@ public class UploadFragment extends Fragment {
     private ProgressBar progressBar;
     private Button upload_button;
     private Button select_file;
-
-    public static DatabaseReference getDatabaseReference() {
-        return mDatabaseReference;
-    }
-
-    private static DatabaseReference mDatabaseReference;
-    private StorageReference mStorageReference;
-
-
 
     private Uri pdfUri;
     private String file_name;
@@ -88,12 +78,6 @@ public class UploadFragment extends Fragment {
         upload_button = view.findViewById(R.id.upload_button);
         select_file = view.findViewById(R.id.select_file);
         progressBar = view.findViewById(R.id.progressbar);
-
-        FirebaseDatabase mDocumentDatabase = FirebaseDatabase.getInstance();
-        FirebaseStorage mFirebaseStorage = FirebaseStorage.getInstance();
-
-        mDatabaseReference = mDocumentDatabase.getReference().child("User");
-        mStorageReference = mFirebaseStorage.getReference().child("Upload");
         return view;
     }
 
@@ -238,9 +222,9 @@ public class UploadFragment extends Fragment {
         * 1. Upload file to Firebase Storage
         * 2. Update url of file in Realtime Database
         * */
-        final String filename = System.currentTimeMillis() + "";
+//        final String filename = System.currentTimeMillis() + "";
 
-        mStorageReference.child(file_name).putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+        getStorageReference().child(file_name).putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Task<Uri> firebaseUri = taskSnapshot.getStorage().getDownloadUrl();
@@ -256,12 +240,13 @@ public class UploadFragment extends Fragment {
                     code = 2;
 
                 Document document = new Document(document_name_editText.getText().toString(), uri, code);
-                mDatabaseReference.push().setValue(document).addOnCompleteListener(new OnCompleteListener<Void>() {
+                getDatabaseReference().push().setValue(document).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(getContext(), "File uploaded successfully", Toast.LENGTH_SHORT).show();
                             document_name_editText.setText("");
+                            getDocumentAdapter().clear();
                         }
                         else
                             Toast.makeText(getContext(), "Error : File cannot be uploaded", Toast.LENGTH_SHORT).show();
