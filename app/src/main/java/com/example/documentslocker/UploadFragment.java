@@ -40,8 +40,9 @@ import java.util.List;
 import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
-import static com.example.documentslocker.MainActivity.getDocumentDatabase;
-import static com.example.documentslocker.MainActivity.getDocumentStorage;
+import static com.example.documentslocker.LoginActivity.getDocumentDatabase;
+import static com.example.documentslocker.LoginActivity.getDocumentStorage;
+import static com.example.documentslocker.LoginActivity.getUid;
 import static com.example.documentslocker.MyDocumentsFragment.getDocumentAdapter;
 
 public class UploadFragment extends Fragment {
@@ -74,7 +75,7 @@ public class UploadFragment extends Fragment {
         * 2. Creation of View
         * */
 
-        View view = inflater.inflate(R.layout.fragment_upload, null);
+        View view = inflater.inflate(R.layout.fragment_upload, container, false);
 
         document_name_editText = view.findViewById(R.id.document_name);
         selectedFileTextView = view.findViewById(R.id.selectedFileId);
@@ -83,8 +84,10 @@ public class UploadFragment extends Fragment {
         select_file = view.findViewById(R.id.select_file);
         progressBar = view.findViewById(R.id.progressbar);
 
-        mDatabaseReference = getDocumentDatabase().getReference().child("User");
-        mStorageReference = getDocumentStorage().getReference().child("Upload");
+        String uid = getUid();
+
+        mDatabaseReference = getDocumentDatabase().getReference().child("users").child(uid);
+        mStorageReference = getDocumentStorage().getReference().child("uploads").child("users");
         return view;
     }
 
@@ -246,7 +249,7 @@ public class UploadFragment extends Fragment {
                 else if (file_name.endsWith(".docx") || file_name.endsWith(".doc"))
                     code = 2;
 
-                Document document = new Document(document_name_editText.getText().toString(), uri, code);
+                Document document = new Document(Objects.requireNonNull(document_name_editText.getText()).toString(), uri, code);
                 mDatabaseReference.push().setValue(document).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {

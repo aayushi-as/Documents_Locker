@@ -17,7 +17,8 @@ import com.google.firebase.database.DatabaseReference;
 
 import java.util.Objects;
 
-import static com.example.documentslocker.MainActivity.getDocumentDatabase;
+import static com.example.documentslocker.LoginActivity.getDocumentDatabase;
+import static com.example.documentslocker.LoginActivity.getUid;
 import static com.example.documentslocker.UploadFragment.getDocumentList;
 
 public class MyDocumentsFragment extends Fragment {
@@ -28,18 +29,17 @@ public class MyDocumentsFragment extends Fragment {
         return mDocumentAdapter;
     }
     private static DatabaseReference mDatabaseReference;
-//    private StorageReference mStorageReference;
-
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view =  inflater.inflate(R.layout.fragment_mydocuments, null);
+        View view =  inflater.inflate(R.layout.fragment_mydocuments, container, false);
         ListView documentListView = view.findViewById(R.id.documentListView);
         mDocumentAdapter = new DocumentAdapter(Objects.requireNonNull(getContext()), R.layout.document_item, getDocumentList());
         documentListView.setAdapter(getDocumentAdapter());
-        mDatabaseReference = getDocumentDatabase().getReference().child("User");
-//        mStorageReference = getDocumentStorage().getReference().child("Upload");
+
+        String uid = getUid();
+        mDatabaseReference = getDocumentDatabase().getReference().child("users").child(uid);
         attachDatabaseReadListener();
 
         return view;
