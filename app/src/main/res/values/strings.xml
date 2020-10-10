@@ -13,4 +13,9 @@
     <string name="select_file">Select file</string>
     <string name="no_file_selected">No file selected</string>
     <string name="sign_out">SignOut</string>
+    <string name="downloadbutton">downloadButton</string>
+    <string name="cancel">@android:string/cancel</string>
+    <string name="delete">DELETE</string>
+    <string name="add_to_fav">ADD TO FAVOURITE</string>
+    <string name="download">DOWNLOAD</string>
 </resources>

@@ -249,7 +249,7 @@ public class UploadFragment extends Fragment {
                 else if (file_name.endsWith(".docx") || file_name.endsWith(".doc"))
                     code = 2;
 
-                Document document = new Document(Objects.requireNonNull(document_name_editText.getText()).toString(), uri, code);
+                Document document = new Document(Objects.requireNonNull(document_name_editText.getText()).toString(), uri, code, file_name);
                 mDatabaseReference.push().setValue(document).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {

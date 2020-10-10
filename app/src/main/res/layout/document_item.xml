@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="88dp"
+    android:layout_height="80dp"
     xmlns:tool="http://schemas.android.com/tools"
-    android:minHeight="88dp">
+    android:minHeight="80dp">
     <ImageView
         android:id="@+id/logo_id"
-        android:layout_width="88dp"
-        android:layout_height="88dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:contentDescription="@string/typeLogo"
         />
     <TextView
         android:id="@+id/document_name_textview"
-        android:layout_marginStart="88dp"
+        android:layout_marginStart="80dp"
         android:layout_marginEnd="88dp"
         android:layout_alignStart="@id/logo_id"
         android:layout_width="match_parent"
@@ -20,5 +20,17 @@
         tool:text="Document_Name"
         android:textSize="16sp"
         android:gravity="center"/>
+
+    <ImageView
+        android:id="@+id/star_outline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:contentDescription="@string/downloadbutton"
+        android:src="@drawable/baseline_star_border_black_36"
+        android:layout_marginEnd="24dp" />
+
+
 
 </RelativeLayout>
