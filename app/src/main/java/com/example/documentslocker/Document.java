@@ -3,18 +3,18 @@ package com.example.documentslocker;
 public class Document {
     private String name;
     private String url;
-    private int code;
     private String storageFileName;
+    private int isFavourite;
 
     public Document(){
 
     }
 
-    public Document(String _name, String _url, int _code, String _storageName){
+    public Document(String _name, String _url, String _storageName){
         this.name = _name;
         this.url = _url;
-        this.code = _code;
         this.storageFileName = _storageName;
+        this.isFavourite = 0;
     }
 
     public String getName() {
@@ -25,11 +25,11 @@ public class Document {
         return url;
     }
 
-    public int getCode() {
-        return code;
-    }
-
     public String getStorageFileName() {
         return storageFileName;
+    }
+
+    public int getIsFavourite() {
+        return isFavourite;
     }
 }

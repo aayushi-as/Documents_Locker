@@ -22,8 +22,15 @@ import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
 
+    public static final String ANONYMOUS = "anonymous";
+    private static final int RC_SIGN_IN = 5;
     private static FirebaseDatabase mDocumentDatabase;
     private static FirebaseStorage mDocumentStorage;
+    private static FirebaseAuth mFirebaseAuth;
+    private static String uid;
+    private FirebaseAuth.AuthStateListener mAuthStateListener;
+    private Context mContext = LoginActivity.this;
+    private String mUserName;
 
     public static FirebaseDatabase getDocumentDatabase() {
         return mDocumentDatabase;
@@ -32,16 +39,6 @@ public class LoginActivity extends AppCompatActivity {
     public static FirebaseStorage getDocumentStorage() {
         return mDocumentStorage;
     }
-
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private static FirebaseAuth mFirebaseAuth;
-
-    public static final String ANONYMOUS = "anonymous";
-    private static final int RC_SIGN_IN = 5;
-    private Context mContext = LoginActivity.this;
-    private String mUserName;
-
-    private static String uid;
 
     public static String getUid() {
         return uid;
@@ -57,6 +54,10 @@ public class LoginActivity extends AppCompatActivity {
         mDocumentDatabase = FirebaseDatabase.getInstance();
         mDocumentStorage = FirebaseStorage.getInstance();
 
+        /*
+        * Firebase Authentication State listener
+        * */
+
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
@@ -68,6 +69,10 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(mContext, "Sign in Successful", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(mContext, MainActivity.class));
                 } else {
+                    /*
+                    * If user == null
+                    * Show Firebase AuthUI with google and email sign in
+                    * */
                     startActivityForResult(AuthUI.getInstance()
                                     .createSignInIntentBuilder()
                                     .setAvailableProviders(Arrays.asList(
@@ -88,6 +93,10 @@ public class LoginActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        /*
+        * Result for sign in
+        * */
+
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
 
@@ -98,13 +107,16 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(mContext, MainActivity.class));
             }
+
             else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "Sign in cancel! ", Toast.LENGTH_SHORT).show();
             }
+
             else if (response != null && Objects.requireNonNull(response.getError()).getErrorCode() == ErrorCodes.NO_NETWORK) {
                 Toast.makeText(this, "No Internet Connection!", Toast.LENGTH_SHORT).show();
                 finish();
             }
+
             else if (response != null && response.getError().getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
                 Toast.makeText(this, "Unknown Error Occurred!", Toast.LENGTH_SHORT).show();
                 finish();
@@ -114,20 +126,20 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        if (mAuthStateListener != null) {
+            mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         if (mAuthStateListener != null) {
             mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
         }
         mAuthStateListener = null;
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (mAuthStateListener != null) {
-            mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-        }
     }
 
 }

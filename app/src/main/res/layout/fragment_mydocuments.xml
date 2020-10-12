@@ -1,9 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/documentListView"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:listitem="@layout/document_item"
-    android:drawSelectorOnTop="true"
-    android:longClickable="true"/>
+    android:layout_width="match_parent">
+
+    <ListView
+        android:id="@+id/documentListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:listitem="@layout/document_item"
+        android:drawSelectorOnTop="true"
+        android:longClickable="true"/>
+
+    <ProgressBar
+        android:id="@+id/myDocuments_progressbar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="invisible"
+        android:max="100"
+        android:layout_marginTop="-7dp"/>
+</RelativeLayout>

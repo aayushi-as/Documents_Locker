@@ -76,6 +76,7 @@
         android:layout_height="wrap_content"
         android:indeterminate="true"
         android:visibility="invisible"
-        android:max="100"/>
+        android:max="100"
+        android:layout_marginTop="-7dp"/>
 
 </RelativeLayout>

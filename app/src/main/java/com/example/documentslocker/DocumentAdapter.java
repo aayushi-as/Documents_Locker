@@ -15,9 +15,6 @@ import java.util.List;
 
 public class DocumentAdapter extends ArrayAdapter<Document> {
 
-    private static final int IMAGE_CODE = 1;
-    private static final int DOCX_CODE = 2;
-    private static final int PDF_CODE = 3;
 
     public DocumentAdapter(@NonNull Context context, int resource, List<Document> docs) {
         super(context, resource, docs);
@@ -34,13 +31,14 @@ public class DocumentAdapter extends ArrayAdapter<Document> {
         Document document = getItem(position);
 
         assert document != null;
-        if (document.getCode() == IMAGE_CODE){
+        String file_name = document.getStorageFileName();
+        if (file_name.endsWith(".jpeg") || file_name.endsWith(".jpg") || file_name.endsWith(".png")){
             logo_image.setImageResource(R.drawable.image);
         }
-        else if (document.getCode() == PDF_CODE){
+        else if (file_name.endsWith(".pdf")){
             logo_image.setImageResource(R.drawable.pdf_logo2);
         }
-        else if (document.getCode() == DOCX_CODE){
+        else if (file_name.endsWith(".docx") || file_name.endsWith(".doc")){
             logo_image.setImageResource(R.drawable.word_logo);
         }
         document_name.setText(document.getName());
