@@ -3,34 +3,37 @@
     android:layout_width="wrap_content"
     android:layout_height="80dp"
     xmlns:tool="http://schemas.android.com/tools"
-    android:minHeight="80dp">
+    android:minHeight="80dp"
+    android:layout_margin="2dp"
+    android:background="#bc477b" >
     <ImageView
         android:id="@+id/logo_id"
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:contentDescription="@string/typeLogo"
+        android:background="#CFCFCF"
         />
     <TextView
         android:id="@+id/document_name_textview"
         android:layout_marginStart="80dp"
-        android:layout_marginEnd="88dp"
         android:layout_alignStart="@id/logo_id"
         android:layout_width="match_parent"
         android:layout_height="88dp"
         tool:text="Document_Name"
         android:textSize="16sp"
-        android:gravity="center"/>
+        android:gravity="center"
+        android:textColor="#ffffff"
+        />
 
-<!--    <ImageView-->
-<!--        android:id="@+id/star_outline"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_alignParentEnd="true"-->
-<!--        android:layout_centerVertical="true"-->
-<!--        android:contentDescription="@string/downloadbutton"-->
-<!--        android:src="@drawable/baseline_star_border_black_36"-->
-<!--        android:layout_marginEnd="24dp" />-->
-
-
+    <ImageView
+        android:id="@+id/favourite"
+        android:visibility="invisible"
+        android:src="@drawable/round_star_white_24"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/favourite_documents"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="8dp"
+        />
 
 </RelativeLayout>

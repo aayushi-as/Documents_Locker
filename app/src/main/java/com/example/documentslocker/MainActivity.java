@@ -17,7 +17,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import static com.example.documentslocker.MyDocumentsFragment.detachDatabaseReadListener;
 import static com.example.documentslocker.MyDocumentsFragment.getDocumentAdapter;
-import static com.example.documentslocker.MyDocumentsFragment.getFavouriteList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,8 +38,8 @@ public class MainActivity extends AppCompatActivity {
                 Fragment fragment = null;
 
                 switch (item.getItemId()) {
-                    case R.id.favourites_page:
-                        fragment = new FavouritesFragment();
+                    case R.id.account_page:
+                        fragment = new AccountFragment();
                         getDocumentAdapter().clear();
                         break;
 
@@ -51,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
                     case R.id.my_doc_page:
                         fragment = new MyDocumentsFragment();
-                        getFavouriteList().clear();
                         break;
                 }
                 return loadFragment(fragment);
@@ -83,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.sign_out) {
             detachDatabaseReadListener();
             getDocumentAdapter().clear();
-            getFavouriteList().clear();
             sign_out();
             return true;
         }
@@ -105,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         detachDatabaseReadListener();
         getDocumentAdapter().clear();
-        getFavouriteList().clear();
         sign_out();
     }
 

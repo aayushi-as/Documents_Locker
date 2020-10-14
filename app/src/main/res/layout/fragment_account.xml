@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:id="@+id/account"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/account_name"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:background="#bc477b"
+        android:layout_margin="4dp"
+        android:textColor="#ffffff"
+        app:drawableStartCompat="@drawable/baseline_account_circle_white_36" />
+
+    <TextView
+        android:id="@+id/email"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/email"
+        android:textSize="16sp"
+        android:layout_margin="4dp"
+        android:gravity="center"
+        android:background="#bc477b"
+        android:textColor="#ffffff"
+        app:drawableStartCompat="@drawable/baseline_email_white_36" />
+
+
+    <TextView
+        android:id="@+id/total_Documents"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/total_documents"
+        android:textSize="16sp"
+        android:layout_margin="4dp"
+        android:gravity="center"
+        android:background="#bc477b"
+        android:textColor="#ffffff" />
+
+    <TextView
+        android:id="@+id/favourite_documents"
+        android:padding="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/favourite_documents"
+        android:textSize="16sp"
+        android:layout_margin="4dp"
+        android:gravity="center"
+        android:background="#bc477b"
+        android:textColor="#ffffff" />
+
+</LinearLayout>
+
+
+

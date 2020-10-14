@@ -28,8 +28,6 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.StorageReference;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
@@ -43,11 +41,21 @@ public class MyDocumentsFragment extends Fragment {
     public static ChildEventListener mChildEventListener;
     private static DocumentAdapter mDocumentAdapter;
     private static DatabaseReference mDatabaseReference;
-    private static List<Document> favouriteList = new ArrayList<>();
     private ProgressBar progressBar;
+    private static int favouriteDocuments = 0;
+    private static int totalDocs = 0;
 
-    public static List<Document> getFavouriteList() {
-        return favouriteList;
+    public static int getTotalDocs() {
+        return totalDocs;
+    }
+
+    public static void setCount() {
+        totalDocs = 0;
+        favouriteDocuments = 0;
+    }
+
+    public static int getFavouriteDocuments() {
+        return favouriteDocuments;
     }
 
     public static DocumentAdapter getDocumentAdapter() {
@@ -60,15 +68,17 @@ public class MyDocumentsFragment extends Fragment {
             /*
              * Added ChildListener to read data from firebase
              * */
+            setCount();
+
             ChildEventListener mChildEventListener = new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                     Document doc = snapshot.getValue(Document.class);
                     mDocumentAdapter.add(doc);
-//                  Get favourites list in Favourites Fragment
+                    totalDocs ++;
                     assert doc != null;
                     if (doc.getIsFavourite() == 1)
-                        favouriteList.add(doc);
+                        favouriteDocuments ++;
                 }
 
                 @Override
@@ -94,7 +104,6 @@ public class MyDocumentsFragment extends Fragment {
     public static void detachDatabaseReadListener() {
         if (mChildEventListener != null) {
             mDocumentAdapter.clear();
-            favouriteList.clear();
             mDatabaseReference.removeEventListener(mChildEventListener);
             mChildEventListener = null;
         }
@@ -115,23 +124,14 @@ public class MyDocumentsFragment extends Fragment {
 
         attachDatabaseReadListener();
 
-        onItemLongPress(documentListView);
-
-        onItemClick(documentListView);
-
-        return view;
-    }
-
-    private void onItemLongPress(ListView documentListView) {
-
         /*
-        * On long press : delete document
-        * */
+         * On long press : delete document
+         * */
 
         documentListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-            //_____________________________________________________________________________________________________________________
+                //_____________________________________________________________________________________________________________________
                 final Document fileClicked = getDocumentList().get(position);
 
                 String title = "Are you sure ?";
@@ -155,18 +155,25 @@ public class MyDocumentsFragment extends Fragment {
 
 
                 return true;
-            //_____________________________________________________________________________________________________________________
+                //_____________________________________________________________________________________________________________________
             }
         });
-    }
 
-    private void onItemClick(ListView documentListView) {
-    //_____________________________________________________________________________________________________________________
+        //_____________________________________________________________________________________________________________________
         documentListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view, int position, long id) {
                 final Document docClicked = getDocumentList().get(position);
                 String title = "Add to favourites or download ?";
+                int stringId;
+                final int value;
+                if (docClicked.getIsFavourite() == 0) {
+                    stringId = R.string.add_to_fav;
+                    value = 1;
+                } else {
+                    stringId = R.string.remove_from_fav;
+                    value = 0;
+                }
 
                 new MaterialAlertDialogBuilder(Objects.requireNonNull(getContext())).setTitle(title)
                         .setNeutralButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -175,10 +182,10 @@ public class MyDocumentsFragment extends Fragment {
 
                             }
                         })
-                        .setNegativeButton(R.string.add_to_fav, new DialogInterface.OnClickListener() {
+                        .setNegativeButton(stringId, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                addToFavourite(docClicked);
+                                favourite(docClicked, value);
                             }
                         })
                         .setPositiveButton(R.string.download, new DialogInterface.OnClickListener() {
@@ -189,13 +196,15 @@ public class MyDocumentsFragment extends Fragment {
                         }).show();
             }
         });
+
+        return view;
     }
 
     private void deleteFile(String url, String name) {
 
         /*
-        * Match url and then delete document from firebase database and storage
-        * */
+         * Match url and then delete document from firebase database and storage
+         * */
         Query query = mDatabaseReference.orderByChild("url").equalTo(url);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -217,7 +226,6 @@ public class MyDocumentsFragment extends Fragment {
             public void onSuccess(Void aVoid) {
                 Toast.makeText(getContext(), "Document deleted!", Toast.LENGTH_SHORT).show();
                 mDocumentAdapter.clear();
-                favouriteList.clear();
                 attachDatabaseReadListener();
 
             }
@@ -259,30 +267,28 @@ public class MyDocumentsFragment extends Fragment {
 
     }
 
-    private void addToFavourite(Document doc) {
+    private void favourite(Document doc, final int value) {
 
-        if (doc.getIsFavourite() == 1)
-            Toast.makeText(getContext(), "Already added to favourites", Toast.LENGTH_SHORT).show();
-        else {
-            Query query = mDatabaseReference.orderByChild("url").equalTo(doc.getUrl());
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
+        Query query = mDatabaseReference.orderByChild("url").equalTo(doc.getUrl());
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                    for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        String key = dataSnapshot.getRef().getKey();
-                        assert key != null;
-                        mDatabaseReference.child(key).child("isFavourite").setValue(1);
-                        break;
-                    }
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    String key = dataSnapshot.getRef().getKey();
+                    assert key != null;
+                    mDatabaseReference.child(key).child("isFavourite").setValue(value);
+                    break;
                 }
+                mDocumentAdapter.clear();
+                attachDatabaseReadListener();
+            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    Toast.makeText(getContext(), "Error Occurred", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Error Occurred", Toast.LENGTH_SHORT).show();
+            }
+        });
 
     }
 

@@ -30,7 +30,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -44,7 +43,6 @@ import static com.example.documentslocker.LoginActivity.getDocumentDatabase;
 import static com.example.documentslocker.LoginActivity.getDocumentStorage;
 import static com.example.documentslocker.LoginActivity.getUid;
 import static com.example.documentslocker.MyDocumentsFragment.getDocumentAdapter;
-import static com.example.documentslocker.MyDocumentsFragment.getFavouriteList;
 
 public class UploadFragment extends Fragment {
     private static final int RC_PERMISSION = 1;
@@ -242,7 +240,6 @@ public class UploadFragment extends Fragment {
                             Toast.makeText(getContext(), "File uploaded successfully", Toast.LENGTH_SHORT).show();
                             document_name_editText.setText("");
                             getDocumentAdapter().clear();
-                            getFavouriteList().clear();
                         } else
                             Toast.makeText(getContext(), "Error : File cannot be uploaded", Toast.LENGTH_SHORT).show();
 

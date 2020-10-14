@@ -56,7 +56,9 @@
         android:layout_margin="24dp"
         android:enabled="true"
         android:text="@string/upload"
-        app:icon="@drawable/round_add_circle_white_24" />
+        app:icon="@drawable/round_add_circle_white_24"
+        app:backgroundTint="#82e9de"
+        />
 
     <Button
         android:id="@+id/select_file"
@@ -77,6 +79,6 @@
         android:indeterminate="true"
         android:visibility="invisible"
         android:max="100"
-        android:layout_marginTop="-7dp"/>
+        android:layout_marginTop="-5dp"/>
 
 </RelativeLayout>

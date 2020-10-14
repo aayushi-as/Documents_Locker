@@ -30,7 +30,12 @@ public class LoginActivity extends AppCompatActivity {
     private static String uid;
     private FirebaseAuth.AuthStateListener mAuthStateListener;
     private Context mContext = LoginActivity.this;
-    private String mUserName;
+    private static String mUserName;
+    private static String mEmailId;
+
+    public static String getEmailId() {
+        return mEmailId;
+    }
 
     public static FirebaseDatabase getDocumentDatabase() {
         return mDocumentDatabase;
@@ -42,6 +47,10 @@ public class LoginActivity extends AppCompatActivity {
 
     public static String getUid() {
         return uid;
+    }
+
+    public static String getUserName() {
+        return mUserName;
     }
 
     @Override
@@ -65,6 +74,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 if (user != null) {
                     mUserName = user.getDisplayName();
+                    mEmailId = user.getEmail();
                     uid = user.getUid();
                     Toast.makeText(mContext, "Sign in Successful", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(mContext, MainActivity.class));
@@ -103,6 +113,7 @@ public class LoginActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 mUserName = Objects.requireNonNull(mFirebaseAuth.getCurrentUser()).getDisplayName();
                 uid = mFirebaseAuth.getCurrentUser().getUid();
+                mEmailId = mFirebaseAuth.getCurrentUser().getEmail();
                 String text = "Signed in as " + mUserName;
                 Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(mContext, MainActivity.class));

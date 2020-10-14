@@ -28,18 +28,24 @@ public class DocumentAdapter extends ArrayAdapter<Document> {
 
         TextView document_name = convertView.findViewById(R.id.document_name_textview);
         ImageView logo_image = convertView.findViewById(R.id.logo_id);
+        ImageView image = convertView.findViewById(R.id.favourite);
         Document document = getItem(position);
 
         assert document != null;
+        if (document.getIsFavourite() == 1)
+            image.setVisibility(View.VISIBLE);
+        else
+            image.setVisibility(View.INVISIBLE);
+
         String file_name = document.getStorageFileName();
         if (file_name.endsWith(".jpeg") || file_name.endsWith(".jpg") || file_name.endsWith(".png")){
-            logo_image.setImageResource(R.drawable.image);
+            logo_image.setImageResource(R.drawable.image_file);
         }
         else if (file_name.endsWith(".pdf")){
-            logo_image.setImageResource(R.drawable.pdf_logo2);
+            logo_image.setImageResource(R.drawable.pdf_file);
         }
         else if (file_name.endsWith(".docx") || file_name.endsWith(".doc")){
-            logo_image.setImageResource(R.drawable.word_logo);
+            logo_image.setImageResource(R.drawable.word_file);
         }
         document_name.setText(document.getName());
 

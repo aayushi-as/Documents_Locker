@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:itemIconSize="36dp">
     <item
-        android:id="@+id/favourites_page"
+        android:id="@+id/account_page"
         android:enabled="true"
-        android:icon="@drawable/round_star_white_36"
-        android:title="@string/favourites"
+        android:icon="@drawable/baseline_account_circle_white_36"
+        android:title="@string/account"
         />
     <item
         android:id="@+id/upload_page"
